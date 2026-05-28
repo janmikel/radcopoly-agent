@@ -4,10 +4,19 @@ from radcopoly_agent.copoldb_client import CoPolDBClient
 def main():
     client = CoPolDBClient()
 
-    monomer1 = input("Monomer 1 name or SMILES: ")
-    monomer2 = input("Monomer 2 name or SMILES: ")
+    mode = input("Search by name or SMILES? [name/smiles]: ").strip().casefold()
 
-    results = client.search_by_names(monomer1, monomer2)
+    if mode == "smiles":
+        smiles1 = input("Monomer 1 SMILES: ").strip()
+        smiles2 = input("Monomer 2 SMILES: ").strip()
+        results = client.search_candidates_by_smiles(smiles1, smiles2)
+        print("WARNING: CoPolDB SMILES search is candidate/fuzzy search, not exact matching.")
+        print("Use name search or RDKit canonical matching before trusting r1/r2.")
+
+    else:
+        monomer1 = input("Monomer 1 name: ").strip()
+        monomer2 = input("Monomer 2 name: ").strip()
+        results = client.search_by_names(monomer1, monomer2)
 
     if not results:
         print("No CoPolDB results found.")

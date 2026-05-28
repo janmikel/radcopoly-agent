@@ -17,19 +17,11 @@ class ReactivityRatioResult:
 class CoPolDBClient:
     base_url = "https://www.copoldb.jp"
 
-    def search_by_names(self, monomer1: str, monomer2: str):
-        url = f"{self.base_url}/copolym/list"
-        params = {
-            "m1": monomer1,
-            "m2": monomer2,
-            "mode": 0,
-        }
+    def _same_name(self, a: str, b: str) -> bool:
+        return a.strip().casefold() == b.strip().casefold()
 
-        response = requests.get(url, params=params, timeout=30)
-        response.raise_for_status()
-
-        soup = BeautifulSoup(response.text, "html.parser")
-
+    def _parse_results(self, html: str, source_url: str):
+        soup = BeautifulSoup(html, "html.parser")
         results = []
 
         for table in soup.find_all("table"):
@@ -41,8 +33,6 @@ class CoPolDBClient:
                 text = row.get_text(" ", strip=True)
                 parts = text.split()
 
-                # Expected rough pattern:
-                # Go into details Styrene Methoxymethyl methacrylate 0.395 0.586 ...
                 numbers = []
                 for part in parts:
                     try:
@@ -65,31 +55,54 @@ class CoPolDBClient:
                     if "/monomer/detail" in link["href"]
                 ]
 
-                if len(monomer_links) >= 2:
-                    found_m1 = monomer_links[0]
-                    found_m2 = monomer_links[1]
-                else:
-                    found_m1 = monomer1
-                    found_m2 = monomer2
-
-                if not (
-                    self._same_name(found_m1, monomer1)
-                    and self._same_name(found_m2, monomer2)
-                ):
+                if len(monomer_links) < 2:
                     continue
-                
+
                 results.append(
                     ReactivityRatioResult(
-                        monomer1=found_m1,
-                        monomer2=found_m2,
+                        monomer1=monomer_links[0],
+                        monomer2=monomer_links[1],
                         r1=numbers[0],
                         r2=numbers[1],
                         doi=doi,
-                        source_url=response.url,
+                        source_url=source_url,
                     )
                 )
 
         return results
-    
-    def _same_name(self, a: str, b: str) -> bool:
-        return a.strip().casefold() == b.strip().casefold()
+
+    def search_by_names(self, monomer1: str, monomer2: str, exact: bool = True):
+        url = f"{self.base_url}/copolym/list"
+        params = {
+            "m1": monomer1,
+            "m2": monomer2,
+            "mode": 0,
+        }
+
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+
+        results = self._parse_results(response.text, response.url)
+
+        if exact:
+            results = [
+                result
+                for result in results
+                if self._same_name(result.monomer1, monomer1)
+                and self._same_name(result.monomer2, monomer2)
+            ]
+
+        return results
+
+    def search_candidates_by_smiles(self, smiles1: str, smiles2: str):
+        url = f"{self.base_url}/copolym/list"
+        params = {
+            "sm1": smiles1,
+            "sm2": smiles2,
+            "mode": 0,
+        }
+
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+
+        return self._parse_results(response.text, response.url)

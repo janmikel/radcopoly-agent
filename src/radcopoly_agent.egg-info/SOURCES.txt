@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/radcopoly_agent/__init__.py
+src/radcopoly_agent/copoldb_client.py
+src/radcopoly_agent/kmc_mayo_lewis.py
+src/radcopoly_agent/rdkit_utils.py
+src/radcopoly_agent/search_r_values.py
+src/radcopoly_agent.egg-info/PKG-INFO
+src/radcopoly_agent.egg-info/SOURCES.txt
+src/radcopoly_agent.egg-info/dependency_links.txt
+src/radcopoly_agent.egg-info/requires.txt
+src/radcopoly_agent.egg-info/top_level.txt

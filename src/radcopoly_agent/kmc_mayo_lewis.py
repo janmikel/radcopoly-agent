@@ -1,0 +1,156 @@
+from dataclasses import dataclass
+from collections import Counter
+import random
+
+
+@dataclass
+class KMCResult:
+    chains: list[str]
+    mn: float
+    mw: float
+    dispersity: float
+    fraction_m1: float
+    fraction_m2: float
+    avg_block_m1: float
+    avg_block_m2: float
+
+
+def choose_next_monomer(last, f1, r1, r2):
+    """
+    Terminal copolymerization model.
+
+    f1 = mole fraction of monomer 1 in feed
+    f2 = 1 - f1
+
+    r1 = k11 / k12
+    r2 = k22 / k21
+    """
+
+    f2 = 1.0 - f1
+
+    if last == "1":
+        p_add_1 = (r1 * f1) / (r1 * f1 + f2)
+    elif last == "2":
+        p_add_1 = f1 / (f1 + r2 * f2)
+    else:
+        p_add_1 = f1
+
+    return "1" if random.random() < p_add_1 else "2"
+
+
+def simulate_chain(length, f1, r1, r2):
+    chain = []
+
+    last = None
+    for _ in range(length):
+        monomer = choose_next_monomer(last, f1, r1, r2)
+        chain.append(monomer)
+        last = monomer
+
+    return "".join(chain)
+
+
+def block_lengths(chain):
+    if not chain:
+        return {"1": [], "2": []}
+
+    blocks = {"1": [], "2": []}
+
+    current = chain[0]
+    count = 1
+
+    for monomer in chain[1:]:
+        if monomer == current:
+            count += 1
+        else:
+            blocks[current].append(count)
+            current = monomer
+            count = 1
+
+    blocks[current].append(count)
+    return blocks
+
+
+def simulate_copolymerization(
+    n_chains=1000,
+    target_dp=100,
+    f1=0.5,
+    r1=1.0,
+    r2=1.0,
+    seed=123,
+):
+    """
+    Basic KMC copolymerization.
+
+    Assumptions:
+    - constant feed composition
+    - fixed target degree of polymerization
+    - no termination kinetics
+    - no chain transfer
+    - no diffusion effects
+    - no monomer depletion
+    """
+
+    random.seed(seed)
+
+    chains = [
+        simulate_chain(length=target_dp, f1=f1, r1=r1, r2=r2)
+        for _ in range(n_chains)
+    ]
+
+    dps = [len(chain) for chain in chains]
+
+    mn = sum(dps) / len(dps)
+    mw = sum(dp * dp for dp in dps) / sum(dps)
+    dispersity = mw / mn
+
+    counts = Counter("".join(chains))
+    total_units = counts["1"] + counts["2"]
+
+    fraction_m1 = counts["1"] / total_units
+    fraction_m2 = counts["2"] / total_units
+
+    all_blocks_1 = []
+    all_blocks_2 = []
+
+    for chain in chains:
+        blocks = block_lengths(chain)
+        all_blocks_1.extend(blocks["1"])
+        all_blocks_2.extend(blocks["2"])
+
+    avg_block_m1 = sum(all_blocks_1) / len(all_blocks_1) if all_blocks_1 else 0.0
+    avg_block_m2 = sum(all_blocks_2) / len(all_blocks_2) if all_blocks_2 else 0.0
+
+    return KMCResult(
+        chains=chains,
+        mn=mn,
+        mw=mw,
+        dispersity=dispersity,
+        fraction_m1=fraction_m1,
+        fraction_m2=fraction_m2,
+        avg_block_m1=avg_block_m1,
+        avg_block_m2=avg_block_m2,
+    )
+
+
+if __name__ == "__main__":
+    result = simulate_copolymerization(
+        n_chains=1000,
+        target_dp=100,
+        f1=0.5,
+        r1=0.395,
+        r2=0.586,
+        seed=123,
+    )
+
+    print(f"Mn: {result.mn:.2f}")
+    print(f"Mw: {result.mw:.2f}")
+    print(f"Dispersity: {result.dispersity:.3f}")
+    print(f"Fraction M1: {result.fraction_m1:.3f}")
+    print(f"Fraction M2: {result.fraction_m2:.3f}")
+    print(f"Average M1 block length: {result.avg_block_m1:.3f}")
+    print(f"Average M2 block length: {result.avg_block_m2:.3f}")
+    print()
+    print("Example chains:")
+    for chain in result.chains[:5]:
+        print(chain)

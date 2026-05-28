@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: radcopoly-agent
+Version: 0.1.0
+Summary: Tools for radical copolymerization parameter lookup and simulation
+Requires-Python: >=3.11
+Requires-Dist: requests
+Requires-Dist: beautifulsoup4
+Requires-Dist: pandas
+Requires-Dist: python-dotenv
