@@ -14,6 +14,16 @@ class KMCResult:
     avg_block_m1: float
     avg_block_m2: float
 
+def chain_mass(chain, mw1, mw2):
+    mass = 0.0
+
+    for monomer in chain:
+        if monomer == "1":
+            mass += mw1
+        else:
+            mass += mw2
+
+    return mass
 
 def choose_next_monomer(last, f1, r1, r2):
     """
@@ -49,6 +59,20 @@ def simulate_chain(length, f1, r1, r2):
 
     return "".join(chain)
 
+def simulate_chain_with_termination(max_dp, f1, r1, r2, p_terminate):
+    chain = []
+    last = None
+
+    while len(chain) < max_dp:
+        monomer = choose_next_monomer(last, f1, r1, r2)
+        chain.append(monomer)
+        last = monomer
+
+        if random.random() < p_terminate:
+            break
+
+    return "".join(chain)
+
 
 def block_lengths(chain):
     if not chain:
@@ -77,7 +101,10 @@ def simulate_copolymerization(
     f1=0.5,
     r1=1.0,
     r2=1.0,
+    mw1=None,
+    mw2=None,
     seed=123,
+    p_terminate=None,
 ):
     """
     Basic KMC copolymerization.
@@ -93,15 +120,31 @@ def simulate_copolymerization(
 
     random.seed(seed)
 
-    chains = [
-        simulate_chain(length=target_dp, f1=f1, r1=r1, r2=r2)
-        for _ in range(n_chains)
-    ]
+    if p_terminate is None:
+        chains = [
+            simulate_chain(length=target_dp, f1=f1, r1=r1, r2=r2)
+            for _ in range(n_chains)
+        ]
+    else:
+        chains = [
+            simulate_chain_with_termination(
+                max_dp=target_dp,
+                f1=f1,
+                r1=r1,
+                r2=r2,
+                p_terminate=p_terminate,
+            )
+            for _ in range(n_chains)
+        ]
 
-    dps = [len(chain) for chain in chains]
+    if mw1 is None or mw2 is None:
+        raise ValueError("mw1 and mw2 must be provided")
 
-    mn = sum(dps) / len(dps)
-    mw = sum(dp * dp for dp in dps) / sum(dps)
+    masses = [chain_mass(chain, mw1, mw2) for chain in chains]
+
+    mn = sum(masses) / len(masses)
+    mw = sum(m * m for m in masses) / sum(masses)
+
     dispersity = mw / mn
 
     counts = Counter("".join(chains))

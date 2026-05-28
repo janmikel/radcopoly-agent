@@ -21,6 +21,20 @@ def choose_result(results):
     return results[index]
 
 
+def ensure_monomer_molecular_weights(client, result):
+    if result.monomer1_mw is None and result.monomer1_url:
+        result.monomer1_mw = client.extract_molecular_weight_from_monomer_page(
+            result.monomer1_url
+        )
+
+    if result.monomer2_mw is None and result.monomer2_url:
+        result.monomer2_mw = client.extract_molecular_weight_from_monomer_page(
+            result.monomer2_url
+        )
+
+    return result
+
+
 def main():
     client = CoPolDBClient()
 
@@ -41,16 +55,30 @@ def main():
         print("No CoPolDB result found. Cannot run KMC.")
         return
 
+    result = ensure_monomer_molecular_weights(client, result)
+
     print("\nSelected CoPolDB result:")
     print(f"Monomer 1: {result.monomer1}")
     print(f"Monomer 2: {result.monomer2}")
     print(f"r1: {result.r1}")
     print(f"r2: {result.r2}")
     print(f"DOI: {result.doi}")
+    print(f"Monomer 1 MW: {result.monomer1_mw}")
+    print(f"Monomer 2 MW: {result.monomer2_mw}")
+
+    if result.monomer1_mw is None or result.monomer2_mw is None:
+        print("Could not determine monomer molecular weights. Cannot run KMC.")
+        return
 
     f1 = float(input("\nFeed fraction f1 for monomer 1 [0.5]: ") or 0.5)
     n_chains = int(input("Number of chains [1000]: ") or 1000)
     target_dp = int(input("Target DP [100]: ") or 100)
+
+    p_term_text = input(
+        "Termination probability per propagation step [blank = fixed DP]: "
+    ).strip()
+    p_terminate = float(p_term_text) if p_term_text else None
+
     seed = int(input("Random seed [123]: ") or 123)
 
     sim = simulate_copolymerization(
@@ -59,7 +87,10 @@ def main():
         f1=f1,
         r1=result.r1,
         r2=result.r2,
+        mw1=result.monomer1_mw,
+        mw2=result.monomer2_mw,
         seed=seed,
+        p_terminate=p_terminate,
     )
 
     print("\nKMC Mayo-Lewis simulation results:")

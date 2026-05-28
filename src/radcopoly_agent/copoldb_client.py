@@ -19,6 +19,8 @@ class ReactivityRatioResult:
     monomer2_url: Optional[str] = None
     monomer1_smiles: Optional[str] = None
     monomer2_smiles: Optional[str] = None
+    monomer1_mw: Optional[float] = None
+    monomer2_mw: Optional[float] = None
 
 
 class CoPolDBClient:
@@ -167,7 +169,43 @@ class CoPolDBClient:
             result.monomer1_smiles = db_smiles1
             result.monomer2_smiles = db_smiles2
 
+            result.monomer1_mw = (
+                self.extract_molecular_weight_from_monomer_page(
+                    result.monomer1_url
+                )
+            )
+
+            result.monomer2_mw = (
+                self.extract_molecular_weight_from_monomer_page(
+                    result.monomer2_url
+                )
+            )
+
             if db_can1 == target1 and db_can2 == target2:
                 exact_matches.append(result)
 
         return exact_matches
+    
+    def extract_molecular_weight_from_monomer_page(
+        self,
+        monomer_url: str,
+    ) -> Optional[float]:
+
+        response = requests.get(monomer_url, timeout=10)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        text = soup.get_text("\n", strip=True)
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+
+        for i, line in enumerate(lines):
+            if "molecular weight" in line.casefold():
+
+                for j in range(i + 1, min(i + 5, len(lines))):
+                    try:
+                        return float(lines[j])
+                    except ValueError:
+                        continue
+
+        return None
