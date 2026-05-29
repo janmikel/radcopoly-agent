@@ -13,3 +13,7 @@ __pycache__/
 
 # Data
 data/
+
+# Cache and outputs
+data/cache/
+outputs/

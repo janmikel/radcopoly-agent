@@ -1,17 +1,63 @@
-from radcopoly_agent.copoldb_client import CoPolDBClient
-from radcopoly_agent.kmc_mayo_lewis import simulate_copolymerization
+"""
+query_and_simulate.py
+
+Interactive end-to-end workflow for radcopoly-agent.
+
+This script connects the main pieces of the project:
+
+1. Query CoPolDB by monomer name or SMILES.
+2. Select a reactivity-ratio result.
+3. Retrieve monomer molecular weights.
+4. Run the Mayo-Lewis stochastic copolymerization simulator.
+5. Print simulation statistics.
+6. Optionally export CSV files and plots.
+
+This is intended as a command-line research workflow rather than a library API.
+For reusable functions, import from:
+
+- radcopoly_agent.copoldb_client
+- radcopoly_agent.kmc_mayo_lewis
+- radcopoly_agent.analysis
+
+Example
+-------
+Run from the repository root:
+
+    python -m radcopoly_agent.query_and_simulate
+"""
 
 from pathlib import Path
 
 from radcopoly_agent.analysis import (
-    export_summary_csv,
     export_chains_csv,
-    plot_molecular_weight_distribution,
+    export_summary_csv,
     plot_dp_distribution,
+    plot_molecular_weight_distribution,
 )
+from radcopoly_agent.copoldb_client import CoPolDBClient
+from radcopoly_agent.kmc_mayo_lewis import simulate_copolymerization
 
 
 def choose_result(results):
+    """Choose one CoPolDB result from a list of candidates.
+
+    Parameters
+    ----------
+    results
+        List of ReactivityRatioResult objects.
+
+    Returns
+    -------
+    ReactivityRatioResult or None
+        The selected result. Returns None if the result list is empty.
+
+    Notes
+    -----
+    CoPolDB searches can return multiple literature measurements or related
+    monomer pairs. The workflow asks the user to choose which result should be
+    used for the simulation.
+    """
+
     if not results:
         return None
 
@@ -31,6 +77,21 @@ def choose_result(results):
 
 
 def ensure_monomer_molecular_weights(client, result):
+    """Populate molecular weights on a CoPolDB result if they are missing.
+
+    Parameters
+    ----------
+    client
+        CoPolDBClient instance.
+    result
+        ReactivityRatioResult selected for simulation.
+
+    Returns
+    -------
+    ReactivityRatioResult
+        The same result object, possibly updated with monomer molecular weights.
+    """
+
     if result.monomer1_mw is None and result.monomer1_url:
         result.monomer1_mw = client.extract_molecular_weight_from_monomer_page(
             result.monomer1_url
@@ -45,6 +106,8 @@ def ensure_monomer_molecular_weights(client, result):
 
 
 def main():
+    """Run the interactive CoPolDB lookup and simulation workflow."""
+
     client = CoPolDBClient()
 
     mode = input("Search by name or SMILES? [name/smiles]: ").strip().casefold()
@@ -160,6 +223,7 @@ def main():
 
         print("\nSaved outputs to:")
         print(output_dir.resolve())
+
 
 if __name__ == "__main__":
     main()
