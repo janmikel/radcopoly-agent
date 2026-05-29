@@ -35,7 +35,7 @@ def collect_chain_records(chains, mw1, mw2):
     return records
 
 
-def export_summary_csv(path, sim, copoldb_result, f1, n_chains, target_dp, p_terminate):
+def export_summary_csv(path, sim, copoldb_result, f1, n_chains, target_dp, max_dp, p_terminate):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -49,11 +49,13 @@ def export_summary_csv(path, sim, copoldb_result, f1, n_chains, target_dp, p_ter
         ["monomer2_mw", copoldb_result.monomer2_mw],
         ["feed_fraction_m1", f1],
         ["n_chains", n_chains],
-        ["target_dp_or_max_dp", target_dp],
+        ["target_dp", target_dp],
+        ["max_dp", max_dp],
         ["p_terminate", p_terminate],
         ["mn", sim.mn],
         ["mw", sim.mw],
         ["dispersity", sim.dispersity],
+        ["mean_dp", sim.mean_dp],
         ["fraction_m1", sim.fraction_m1],
         ["fraction_m2", sim.fraction_m2],
         ["avg_block_m1", sim.avg_block_m1],

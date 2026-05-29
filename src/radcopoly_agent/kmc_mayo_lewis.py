@@ -9,33 +9,14 @@ class KMCResult:
     mn: float
     mw: float
     dispersity: float
+    mean_dp: float
     fraction_m1: float
     fraction_m2: float
     avg_block_m1: float
     avg_block_m2: float
 
-def chain_mass(chain, mw1, mw2):
-    mass = 0.0
-
-    for monomer in chain:
-        if monomer == "1":
-            mass += mw1
-        else:
-            mass += mw2
-
-    return mass
 
 def choose_next_monomer(last, f1, r1, r2):
-    """
-    Terminal copolymerization model.
-
-    f1 = mole fraction of monomer 1 in feed
-    f2 = 1 - f1
-
-    r1 = k11 / k12
-    r2 = k22 / k21
-    """
-
     f2 = 1.0 - f1
 
     if last == "1":
@@ -52,12 +33,14 @@ def simulate_chain(length, f1, r1, r2):
     chain = []
 
     last = None
+
     for _ in range(length):
         monomer = choose_next_monomer(last, f1, r1, r2)
         chain.append(monomer)
         last = monomer
 
     return "".join(chain)
+
 
 def simulate_chain_with_termination(max_dp, f1, r1, r2, p_terminate):
     chain = []
@@ -95,6 +78,10 @@ def block_lengths(chain):
     return blocks
 
 
+def chain_mass(chain, mw1, mw2):
+    return sum(mw1 if unit == "1" else mw2 for unit in chain)
+
+
 def simulate_copolymerization(
     n_chains=1000,
     target_dp=100,
@@ -105,20 +92,12 @@ def simulate_copolymerization(
     mw2=None,
     seed=123,
     p_terminate=None,
+    max_dp=10000,
 ):
-    """
-    Basic KMC copolymerization.
-
-    Assumptions:
-    - constant feed composition
-    - fixed target degree of polymerization
-    - no termination kinetics
-    - no chain transfer
-    - no diffusion effects
-    - no monomer depletion
-    """
-
     random.seed(seed)
+
+    if mw1 is None or mw2 is None:
+        raise ValueError("mw1 and mw2 must be provided")
 
     if p_terminate is None:
         chains = [
@@ -128,7 +107,7 @@ def simulate_copolymerization(
     else:
         chains = [
             simulate_chain_with_termination(
-                max_dp=target_dp,
+                max_dp=max_dp,
                 f1=f1,
                 r1=r1,
                 r2=r2,
@@ -137,14 +116,14 @@ def simulate_copolymerization(
             for _ in range(n_chains)
         ]
 
-    if mw1 is None or mw2 is None:
-        raise ValueError("mw1 and mw2 must be provided")
+    dps = [len(chain) for chain in chains]
+    mean_dp = sum(dps) / len(dps)
 
     masses = [chain_mass(chain, mw1, mw2) for chain in chains]
 
     mn = sum(masses) / len(masses)
     mw = sum(m * m for m in masses) / sum(masses)
-
+    
     dispersity = mw / mn
 
     counts = Counter("".join(chains))
@@ -169,6 +148,7 @@ def simulate_copolymerization(
         mn=mn,
         mw=mw,
         dispersity=dispersity,
+        mean_dp=mean_dp,
         fraction_m1=fraction_m1,
         fraction_m2=fraction_m2,
         avg_block_m1=avg_block_m1,
@@ -183,17 +163,18 @@ if __name__ == "__main__":
         f1=0.5,
         r1=0.395,
         r2=0.586,
+        mw1=104.152,
+        mw2=130.143,
         seed=123,
+        p_terminate=0.01,
+        max_dp=10000,
     )
 
     print(f"Mn: {result.mn:.2f}")
     print(f"Mw: {result.mw:.2f}")
     print(f"Dispersity: {result.dispersity:.3f}")
+    print(f"Mean DP: {result.mean_dp:.2f}")
     print(f"Fraction M1: {result.fraction_m1:.3f}")
     print(f"Fraction M2: {result.fraction_m2:.3f}")
     print(f"Average M1 block length: {result.avg_block_m1:.3f}")
     print(f"Average M2 block length: {result.avg_block_m2:.3f}")
-    print()
-    print("Example chains:")
-    for chain in result.chains[:5]:
-        print(chain)

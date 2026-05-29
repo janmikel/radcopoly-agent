@@ -88,6 +88,11 @@ def main():
     ).strip()
     p_terminate = float(p_term_text) if p_term_text else None
 
+    if p_terminate is not None:
+        max_dp = int(input("Safety max DP [10000]: ") or 10000)
+    else:
+        max_dp = target_dp
+
     seed = int(input("Random seed [123]: ") or 123)
 
     sim = simulate_copolymerization(
@@ -100,12 +105,14 @@ def main():
         mw2=result.monomer2_mw,
         seed=seed,
         p_terminate=p_terminate,
+        max_dp=max_dp,
     )
 
     print("\nKMC Mayo-Lewis simulation results:")
     print(f"Mn: {sim.mn:.2f}")
     print(f"Mw: {sim.mw:.2f}")
     print(f"Dispersity: {sim.dispersity:.3f}")
+    print(f"Mean DP: {sim.mean_dp:.2f}")
     print(f"Fraction M1: {sim.fraction_m1:.3f}")
     print(f"Fraction M2: {sim.fraction_m2:.3f}")
     print(f"Average M1 block length: {sim.avg_block_m1:.3f}")
@@ -128,6 +135,7 @@ def main():
             f1=f1,
             n_chains=n_chains,
             target_dp=target_dp,
+            max_dp=max_dp,
             p_terminate=p_terminate,
         )
 

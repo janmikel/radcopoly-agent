@@ -1,19 +1,21 @@
 metric,value
 monomer1,Styrene
-monomer2,Methoxymethyl methacrylate
-r1,0.395
-r2,0.586
-doi,https://doi.org/10.1002/pol.1984.170221002
+monomer2,2-Acetoxyethyl methacrylate
+r1,0.44
+r2,0.58
+doi,https://doi.org/10.1295/koron.32.189
 monomer1_mw,104.152
-monomer2_mw,130.143
+monomer2_mw,172.18
 feed_fraction_m1,0.5
 n_chains,1000
-target_dp_or_max_dp,100
+target_dp,100
+max_dp,10000
 p_terminate,0.01
-mn,7562.067914000001
-mw,9899.21265304843
-dispersity,1.309061590774868
-fraction_m1,0.46653973406579685
-fraction_m2,0.5334602659342031
-avg_block_m1,1.388481189038551
-avg_block_m2,1.5847009735744089
+mn,14511.461100000015
+mw,29908.723743448714
+dispersity,2.0610415131422353
+mean_dp,103.767
+fraction_m1,0.47529561421261096
+fraction_m2,0.5247043857873891
+avg_block_m1,1.431390759229162
+avg_block_m2,1.5782654066902428
