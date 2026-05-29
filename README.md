@@ -5,6 +5,7 @@ Tools for radical copolymerization informatics and simulation.
 ## Overview
 
 `radcopoly-agent` combines literature-derived copolymerization parameters from CoPolDB with stochastic copolymerization simulations.
+Reactivity-ratio data are obtained from CoPolDB when available.
 
 Current workflow:
 
@@ -63,6 +64,44 @@ Current model assumptions:
 * No initiator kinetics
 
 See `docs/science_notes.md` for details.
+
+## Data Source
+
+This project uses data obtained from **CoPolDB**, a database of radical copolymerization reactions and monomer reactivity ratios.
+
+If you use `radcopoly-agent` in research, please cite both this software and the CoPolDB publication:
+
+> T. Yamamoto, T. Nakao, H. Uehara, T. Kubo, and K. Ute, *CoPolDB: a database for radical copolymerization of vinyl monomers*, Polymer Chemistry, 2024.
+>
+> DOI: https://doi.org/10.1039/D3PY01372C
+
+### CoPolDB Website
+
+https://www.copoldb.jp/
+
+### Disclaimer
+
+`radcopoly-agent` is not affiliated with the CoPolDB project. CoPolDB remains the authoritative source of the copolymerization data used by this software.
+
+## Citation
+
+If you use this software in a publication, please cite:
+
+### Software
+
+Carrillo, J. M. *radcopoly-agent* (2026)
+
+GitHub:
+https://github.com/janmikel/radcopoly-agent
+
+### Database
+
+Yamamoto, T.; Nakao, T.; Uehara, H.; Kubo, T.; Ute, K.
+*CoPolDB: a database for radical copolymerization of vinyl monomers*.
+Polymer Chemistry (2024).
+
+DOI: https://doi.org/10.1039/D3PY01372C
+
 
 ## Roadmap
 
