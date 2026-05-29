@@ -6,6 +6,8 @@ import requests
 from bs4 import BeautifulSoup
 from rdkit import Chem
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @dataclass
 class ReactivityRatioResult:
@@ -26,6 +28,9 @@ class ReactivityRatioResult:
 class CoPolDBClient:
     base_url = "https://www.copoldb.jp"
 
+    def __init__(self, verify_ssl: bool = False):
+        self.verify_ssl = verify_ssl
+
     def canonicalize_smiles(self, smiles: str) -> str:
         mol = Chem.MolFromSmiles(smiles)
         if mol is None:
@@ -36,7 +41,7 @@ class CoPolDBClient:
         return a.strip().casefold() == b.strip().casefold()
 
     def extract_smiles_from_monomer_page(self, monomer_url: str) -> Optional[str]:
-        response = requests.get(monomer_url, timeout=30)
+        response = requests.get(monomer_url, timeout=30, verify=self.verify_ssl)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
@@ -115,7 +120,7 @@ class CoPolDBClient:
             "mode": 0,
         }
 
-        response = requests.get(url, params=params, timeout=30)
+        response = requests.get(url, params=params, timeout=30, verify=self.verify_ssl)
         response.raise_for_status()
 
         results = self._parse_results(response.text, response.url)
@@ -138,7 +143,7 @@ class CoPolDBClient:
             "mode": 0,
         }
 
-        response = requests.get(url, params=params, timeout=30)
+        response = requests.get(url, params=params, timeout=30, verify=self.verify_ssl)
         response.raise_for_status()
 
         return self._parse_results(response.text, response.url)
@@ -191,7 +196,7 @@ class CoPolDBClient:
         monomer_url: str,
     ) -> Optional[float]:
 
-        response = requests.get(monomer_url, timeout=10)
+        response = requests.get(monomer_url, timeout=10, verify=self.verify_ssl)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")

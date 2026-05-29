@@ -1,6 +1,15 @@
 from radcopoly_agent.copoldb_client import CoPolDBClient
 from radcopoly_agent.kmc_mayo_lewis import simulate_copolymerization
 
+from pathlib import Path
+
+from radcopoly_agent.analysis import (
+    export_summary_csv,
+    export_chains_csv,
+    plot_molecular_weight_distribution,
+    plot_dp_distribution,
+)
+
 
 def choose_result(results):
     if not results:
@@ -106,6 +115,43 @@ def main():
     for chain in sim.chains[:5]:
         print(chain)
 
+    save_outputs = input("\nSave CSV and plot outputs? [y/n]: ").strip().casefold()
+
+    if save_outputs == "y":
+        output_dir = Path("outputs")
+        output_dir.mkdir(exist_ok=True)
+
+        export_summary_csv(
+            output_dir / "simulation_summary.csv",
+            sim=sim,
+            copoldb_result=result,
+            f1=f1,
+            n_chains=n_chains,
+            target_dp=target_dp,
+            p_terminate=p_terminate,
+        )
+
+        export_chains_csv(
+            output_dir / "chains.csv",
+            chains=sim.chains,
+            mw1=result.monomer1_mw,
+            mw2=result.monomer2_mw,
+        )
+
+        plot_molecular_weight_distribution(
+            output_dir / "molecular_weight_distribution.png",
+            chains=sim.chains,
+            mw1=result.monomer1_mw,
+            mw2=result.monomer2_mw,
+        )
+
+        plot_dp_distribution(
+            output_dir / "dp_distribution.png",
+            chains=sim.chains,
+        )
+
+        print("\nSaved outputs to:")
+        print(output_dir.resolve())
 
 if __name__ == "__main__":
     main()
